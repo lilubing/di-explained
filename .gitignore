@@ -228,3 +228,7 @@ fabric.properties
 # Jrebel
 rebel.xml
 
+/gradle
+/gradle/*
+/build
+.gradle

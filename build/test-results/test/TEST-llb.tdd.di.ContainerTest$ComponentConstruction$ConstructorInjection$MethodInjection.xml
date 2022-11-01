@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="llb.tdd.di.ContainerTest$ComponentConstruction$ConstructorInjection$MethodInjection" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-11-01T22:33:29" hostname="lilubingdeMacBook-Pro.local" time="0.003">
-  <properties/>
-  <testcase name="should_call_inject_method_even_if_no_dependency_declared()" classname="llb.tdd.di.ContainerTest$ComponentConstruction$ConstructorInjection$MethodInjection" time="0.003"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
