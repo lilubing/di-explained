@@ -8,7 +8,7 @@
         <option name="testRunner" value="GRADLE" />
         <option name="distributionType" value="LOCAL" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="$PROJECT_DIR$/../../gradle-7.5.1" />
+        <option name="gradleHome" value="/usr/local/gradle" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
