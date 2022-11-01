@@ -2,14 +2,17 @@ package llb.tdd.di;
 
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
 
 import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 
 public class ContainerTest {
 
@@ -149,6 +152,43 @@ public class ContainerTest {
 
 			@Nested
 			public class FieldInjection {
+				static class ComponentWithFiledInjection {
+					@Inject
+					Dependency dependency;
+				}
+
+				static class SubclassWithFiledInjection extends ComponentWithFiledInjection {
+				}
+
+				@Test
+				public void should_inject_dependency_via_filed() {
+					Dependency dependency = new Dependency() {
+					};
+					config.bind(Dependency.class, dependency);
+					config.bind(ComponentWithFiledInjection.class, ComponentWithFiledInjection.class);
+
+					ComponentWithFiledInjection component = config.getContext().get(ComponentWithFiledInjection.class).get();
+
+					assertSame(dependency, component.dependency);
+				}
+
+				@Test
+				public void should_inject_dependency_via_superclass_inject_filed() {
+					Dependency dependency = new Dependency() {
+					};
+					config.bind(Dependency.class, dependency);
+					config.bind(SubclassWithFiledInjection.class, SubclassWithFiledInjection.class);
+
+					SubclassWithFiledInjection component = config.getContext().get(SubclassWithFiledInjection.class).get();
+
+					assertSame(dependency, component.dependency);
+				}
+
+				@Test
+				public void should_include_filed_dependency_in_dependencies() {
+					ConstructorInjectionProvider<ComponentWithFiledInjection> provider = new ConstructorInjectionProvider<>(ComponentWithFiledInjection.class);
+					assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
+				}
 			}
 
 			@Nested

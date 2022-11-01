@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="llb.tdd.di.ContainerTest$ComponentConstruction$ConstructorInjection$FieldInjection" tests="3" skipped="0" failures="0" errors="0" timestamp="2022-11-01T12:48:38" hostname="lilubingdeMacBook-Pro.local" time="0.008">
+  <properties/>
+  <testcase name="should_inject_dependency_via_superclass_inject_filed()" classname="llb.tdd.di.ContainerTest$ComponentConstruction$ConstructorInjection$FieldInjection" time="0.002"/>
+  <testcase name="should_include_filed_dependency_in_dependencies()" classname="llb.tdd.di.ContainerTest$ComponentConstruction$ConstructorInjection$FieldInjection" time="0.002"/>
+  <testcase name="should_inject_dependency_via_filed()" classname="llb.tdd.di.ContainerTest$ComponentConstruction$ConstructorInjection$FieldInjection" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
