@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
@@ -31,13 +32,12 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
             throw new IllegalComponentException();
         }
         this.injectConstructor = getInjectConstructor(component);
-        injectFields = getInjectFields(component);
-        injectMethods = getInjectMethods(component);
-
-        if(injectFields.stream().anyMatch(field -> Modifier.isFinal(field.getModifiers()))) {
+        this.injectFields = getInjectFields(component);
+        this.injectMethods = getInjectMethods(component);
+        if (injectFields.stream().anyMatch(f -> Modifier.isFinal(f.getModifiers()))) {
             throw new IllegalComponentException();
         }
-        if(injectMethods.stream().anyMatch(method -> method.getTypeParameters().length != 0 )) {
+        if (injectMethods.stream().anyMatch(m -> m.getTypeParameters().length != 0)) {
             throw new IllegalComponentException();
         }
     }
@@ -60,42 +60,21 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
 
     @Override
     public List<Class<?>> getDependencies() {
-        return concat(concat(stream(injectConstructor.getParameters()).map(Parameter::getType),
-                injectFields.stream().map(Field::getType)),
-                injectMethods.stream().flatMap(m -> stream(m.getParameterTypes()))
-                ).toList();
+        return concat(concat(stream(injectConstructor.getParameterTypes()),
+                        injectFields.stream().map(Field::getType)),
+                injectMethods.stream().flatMap(m -> stream(m.getParameterTypes()))).toList();
     }
 
     private static <T> List<Method> getInjectMethods(Class<T> component) {
-        List<Method> injectMethods = new ArrayList<>();
-        Class<?> current = component;
-        while (current != Object.class) {
-            injectMethods.addAll(getC(component, injectMethods, current));
-            current = current.getSuperclass();
-        }
+        List<Method> injectMethods = traverse(component, (methods, current) -> injectable(current.getDeclaredMethods())
+                .filter(m -> isOverrideByInjectMethod(methods, m))
+                .filter(m -> isOverrideByNoInjectMethod(component, m)).toList());
         Collections.reverse(injectMethods);
         return injectMethods;
     }
 
-    private static <T> List<Method> getC(Class<T> component, List<Method> injectMethods, Class<?> current) {
-        return injectable(current.getDeclaredMethods())
-                .filter(m -> isOverrideByInjectMethod(injectMethods, m))
-                .filter(m -> isOverrideByNoInjectMethod(component, m))
-                .toList();
-    }
-
     private static <T> List<Field> getInjectFields(Class<T> component) {
-        List<Field> injectFields = new ArrayList<>();
-        Class<?> current = component;
-        while (current != Object.class) {
-            injectFields.addAll(getC(current));
-            current = current.getSuperclass();
-        }
-        return injectFields;
-    }
-
-    private static List<Field> getC(Class<?> current) {
-        return injectable(current.getDeclaredFields()).toList();
+        return traverse(component, (fields, current) -> injectable(current.getDeclaredFields()).toList());
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
@@ -112,6 +91,16 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
         } catch (NoSuchMethodException e) {
             throw new IllegalComponentException();
         }
+    }
+
+    private static <T> List<T> traverse(Class<?> component, BiFunction<List<T>, Class<?>, List<T>> finder) {
+        List<T> members = new ArrayList<>();
+        Class<?> current = component;
+        while (current != Object.class) {
+            members.addAll(finder.apply(members, current));
+            current = current.getSuperclass();
+        }
+        return members;
     }
 
     private static <T extends AnnotatedElement> Stream<T> injectable(T[] declaredFields) {
