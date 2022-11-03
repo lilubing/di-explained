@@ -30,13 +30,14 @@ public class InjectionTest {
 
 	private Dependency dependency = mock(Dependency.class);
 	private Provider<Dependency> dependencyProvider = mock(Provider.class);
+	ParameterizedType dependencyProviderType;
 	private Context context = mock(Context.class);
 
 	@BeforeEach
 	public void setup() throws NoSuchFieldException {
-		ParameterizedType providerType = (ParameterizedType) InjectionTest.class.getDeclaredField("dependencyProvider").getGenericType();
+		dependencyProviderType = (ParameterizedType) InjectionTest.class.getDeclaredField("dependencyProvider").getGenericType();
 		when(context.get(eq(Dependency.class))).thenReturn(Optional.of(dependency));
-		when(context.get(eq(providerType))).thenReturn(Optional.of(dependencyProvider));
+		when(context.get(eq(dependencyProviderType))).thenReturn(Optional.of(dependencyProvider));
 	}
 
 	@Nested
@@ -72,6 +73,28 @@ public class InjectionTest {
 			public void should_include_dependency_from_inject_constructor() {
 				InjectionProvider<InjectConstructor> provider = new InjectionProvider<>(InjectConstructor.class);
 				assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
+			}
+
+			@Test
+			public void should_include_provider_type_from_inject_constructor() {
+				InjectionProvider<ProviderInjectConstructor> provider = new InjectionProvider<>(ProviderInjectConstructor.class);
+				assertArrayEquals(new Type[]{dependencyProviderType}, provider.getDependencyTypes().toArray(Type[]::new));
+			}
+
+			static class ProviderInjectConstructor {
+				Provider<Dependency> dependency;
+
+				@Inject
+				public ProviderInjectConstructor(Provider<Dependency> dependency) {
+					this.dependency = dependency;
+				}
+			}
+
+			@Test
+			public void should_inject_provider_via_inject_constructor() {
+
+				ProviderInjectConstructor instance = new InjectionProvider<>(ProviderInjectConstructor.class).get(context);
+				assertSame(dependencyProvider, instance.dependency);
 			}
 		}
 
@@ -141,24 +164,11 @@ public class InjectionTest {
 				InjectionProvider<ComponentWithFieldInjection> provider = new InjectionProvider<>(ComponentWithFieldInjection.class);
 				assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
 			}
-
-			static class ProviderInjectConstructor {
-				Provider<Dependency> dependency;
-
-				@Inject
-				public ProviderInjectConstructor(Provider<Dependency> dependency) {
-					this.dependency = dependency;
-				}
-			}
-
 			@Test
-			public void should_inject_provider_via_inject_constructor() {
-
-				ProviderInjectConstructor instance = new InjectionProvider<>(ProviderInjectConstructor.class).get(context);
-				assertSame(dependencyProvider, instance.dependency);
+			public void should_include_provider_type_from_inject_filed() {
+				InjectionProvider<ProviderInjectField> provider = new InjectionProvider<>(ProviderInjectField.class);
+				assertArrayEquals(new Type[]{dependencyProviderType}, provider.getDependencyTypes().toArray(Type[]::new));
 			}
-
-
 
 			static class ProviderInjectField {
 				@Inject
@@ -215,6 +225,7 @@ public class InjectionTest {
 				InjectMethodWithDependency component = new InjectionProvider<>(InjectMethodWithDependency.class).get(context);
 				assertSame(dependency, component.dependency);
 			}
+
 			static class SuperClassWithInjectMethod {
 				int superCalled = 0;
 				@Inject
@@ -262,6 +273,12 @@ public class InjectionTest {
 				assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray(Class<?>[]::new));
 			}
 
+			@Test
+			public void should_include_provider_type_from_inject_method() {
+				InjectionProvider<ProviderInjectMethod> provider = new InjectionProvider<>(ProviderInjectMethod.class);
+				assertArrayEquals(new Type[]{dependencyProviderType}, provider.getDependencyTypes().toArray(Type[]::new));
+			}
+
 			static class ProviderInjectMethod {
 				Provider<Dependency> dependency;
 
@@ -272,7 +289,7 @@ public class InjectionTest {
 			}
 
 			@Test
-			public void should_inject_provider_via_inject_constructor() {
+			public void should_inject_provider_via_inject_method() {
 				ProviderInjectMethod instance = new InjectionProvider<>(ProviderInjectMethod.class).get(context);
 				assertSame(dependencyProvider, instance.dependency);
 			}
