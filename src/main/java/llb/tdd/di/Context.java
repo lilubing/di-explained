@@ -1,5 +1,7 @@
 package llb.tdd.di;
 
+import java.lang.reflect.ParameterizedType;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -13,4 +15,6 @@ import java.util.Optional;
  */
 public interface Context {
     <Type> Optional<Type> get(Class<Type> type);
+
+    Optional get(ParameterizedType type);
 }

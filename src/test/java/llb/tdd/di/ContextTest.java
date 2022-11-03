@@ -133,15 +133,28 @@ class ContextTest {
 
 			Context context = config.getContext();
 
-			Type type = new TypeLiteral<Provider<Component>>() {}.getType();
+			ParameterizedType type = new TypeLiteral<Provider<Component>>() {}.getType();
 
-			/*Provider<Component> provider = context.get(Provider<Component.class);
-			assertSame(instance, provider.get());*/
+			Provider<Component> provider = (Provider<Component>) context.get(type).get();
+			assertSame(instance, provider.get());
+		}
+
+		@Test
+		public void should_not_retrieve_bind_as_unsupported_container() {
+			Component instance = new Component() {
+			};
+			config.bind(Component.class, instance);
+
+			Context context = config.getContext();
+
+			ParameterizedType type = new TypeLiteral<List<Component>>() {}.getType();
+
+			assertFalse(context.get(type).isPresent());
 		}
 
 		static abstract class TypeLiteral<T> {
-			public Type getType() {
-				return ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+			public ParameterizedType getType() {
+				return (ParameterizedType) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 			}
 		}
 	}
