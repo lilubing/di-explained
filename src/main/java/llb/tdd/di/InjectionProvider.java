@@ -20,6 +20,7 @@ import static java.util.stream.Stream.*;
  * @Version V1.0
  */
 class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
+
     private Constructor<T> injectConstructor;
     private List<Field> injectFields;
     private List<Method> injectMethods;
@@ -112,14 +113,12 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
     private static <T> boolean isOverrideByNoInjectMethod(Class<T> component, Method m) {
         return stream(component.getDeclaredMethods()).filter(m1 -> !m1.isAnnotationPresent(Inject.class)).noneMatch(o -> isOverride(m, o));
     }
-
     private static boolean isOverrideByInjectMethod(List<Method> injectMethods, Method m) {
         return injectMethods.stream().noneMatch(o -> isOverride(m, o));
     }
 
     private static Object[] toDependencies(Context context, Executable executable) {
-        return stream(executable.getParameters()).map(
-                p -> toDependency(context, p.getParameterizedType())).toArray(Object[]::new);
+        return stream(executable.getParameters()).map(p -> toDependency(context, p.getParameterizedType())).toArray(Object[]::new);
     }
 
     private static Object toDependency(Context context, Field field) {
@@ -130,3 +129,4 @@ class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
         return context.get(Context.Ref.of(type)).get();
     }
 }
+

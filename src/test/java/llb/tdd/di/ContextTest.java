@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.internal.util.collections.Sets;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.stream.Stream;
@@ -142,6 +143,75 @@ class ContextTest {
 			Context context = config.getContext();
 
 			assertFalse(context.get(new Context.Ref<List<Component>>() {}).isPresent());
+		}
+
+		@Nested
+		public class WithQualifier {
+			// TODO binding component with qualifier
+			@Test
+			public void should_binding_instance_with_qualifier() {
+				Component instance = new Component() {
+				};
+				config.bind(Component.class, instance, new NamedLiteral("ChoseOne"));
+
+				Context context = config.getContext();
+
+				Component choseOne = context.get(Context.Ref.of(Component.class, new NamedLiteral("ChoseOne"))).get();
+				assertSame(instance, choseOne);
+			}
+
+			@Test
+			public void should_binding_component_with_qualifier() {
+				Dependency dependency = new Dependency() {
+				};
+				config.bind(Dependency.class, dependency);
+				config.bind(InjectionTest.ConstructorInjection.Injection.InjectConstructor.class,
+						InjectionTest.ConstructorInjection.Injection.InjectConstructor.class, new NamedLiteral("ChoseOne"));
+
+				Context context = config.getContext();
+
+				InjectionTest.ConstructorInjection.Injection.InjectConstructor choseOne = context.get(Context.Ref.of(InjectionTest.ConstructorInjection.Injection.InjectConstructor.class,
+						new NamedLiteral("ChoseOne"))).get();
+				assertSame(dependency, choseOne.dependency);
+			}
+
+			@Test
+			public void should_bind_instance_with_multi_qualifier() {
+				Component instance = new Component() {
+				};
+				config.bind(Component.class, instance, new NamedLiteral("ChoseOne"), new NamedLiteral("Skywalker"));
+
+				Context context = config.getContext();
+
+				Component choseOne = context.get(Context.Ref.of(Component.class, new NamedLiteral("ChoseOne"))).get();
+				Component skywalker = context.get(Context.Ref.of(Component.class, new NamedLiteral("Skywalker"))).get();
+
+				assertSame(instance, choseOne);
+				assertSame(instance, skywalker);
+			}
+
+			@Test
+			public void should_bind_component_with_multi_qualifier() {
+				Dependency dependency = new Dependency() {
+				};
+				config.bind(Dependency.class, dependency);
+				config.bind(InjectionTest.ConstructorInjection.Injection.InjectConstructor.class,
+						InjectionTest.ConstructorInjection.Injection.InjectConstructor.class,
+						new NamedLiteral("ChoseOne"), new NamedLiteral("Skywalker"));
+
+
+				Context context = config.getContext();
+
+				InjectionTest.ConstructorInjection.Injection.InjectConstructor choseOne = context.get(Context.Ref.of(InjectionTest.ConstructorInjection.Injection.InjectConstructor.class,
+						new NamedLiteral("ChoseOne"))).get();
+				InjectionTest.ConstructorInjection.Injection.InjectConstructor skywalker = context.get(Context.Ref.of(InjectionTest.ConstructorInjection.Injection.InjectConstructor.class,
+						new NamedLiteral("Skywalker"))).get();
+
+				assertSame(dependency, choseOne.dependency);
+				assertSame(dependency, skywalker.dependency);
+			}
+
+			// TODO throw illegal component if illegal qualifier
 		}
 
 	}
@@ -281,7 +351,7 @@ class ContextTest {
 
 		/*@ParameterizedTest(name = "indirect cyclic dependency between {0}, {1} and {2}")
 		@MethodSource
-		public void should_throw_exception_if_transitive_cyclic_dependency_found(Class<? extends Component> component,
+		public void should_throw_exception_if_transitive_cyclic_dependencies_found(Class<? extends Component> component,
 																				 Class<? extends Dependency> dependency,
 																				 Class<? extends AnotherDependency> anotherDependency) {
 
@@ -364,7 +434,19 @@ class ContextTest {
 			assertTrue(context.get(Context.Ref.of(Component.class)).isPresent());
 		}
 
-
+		@Nested
+		public class WithQualifier {
+			// TODO dependency missing if qualifier not match
+			// TODO check cyclic dependencies with qualifier
+		}
 	}
 
+}
+
+record NamedLiteral(String value) implements jakarta.inject.Named {
+
+	@Override
+	public Class<? extends Annotation> annotationType() {
+		return jakarta.inject.Named.class;
+	}
 }
