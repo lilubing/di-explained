@@ -9,5 +9,6 @@ package llb.tdd.di;
  * @ProjectName 01-di-container
  * @Version V1.0
  */
+// TODO refine different type of illegal components
 public class IllegalComponentException extends RuntimeException {
 }

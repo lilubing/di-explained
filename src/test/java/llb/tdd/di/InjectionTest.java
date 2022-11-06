@@ -1,6 +1,7 @@
 package llb.tdd.di;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -35,8 +36,8 @@ public class InjectionTest {
 	@BeforeEach
 	public void setup() throws NoSuchFieldException {
 		dependencyProviderType = (ParameterizedType) InjectionTest.class.getDeclaredField("dependencyProvider").getGenericType();
-		when(context.get(eq(Context.Ref.of(Dependency.class)))).thenReturn(Optional.of(dependency));
-		when(context.get(eq(Context.Ref.of(dependencyProviderType)))).thenReturn(Optional.of(dependencyProvider));
+		when(context.get(eq(ComponentRef.of(Dependency.class)))).thenReturn(Optional.of(dependency));
+		when(context.get(eq(ComponentRef.of(dependencyProviderType)))).thenReturn(Optional.of(dependencyProvider));
 	}
 
 	@Nested
@@ -71,13 +72,13 @@ public class InjectionTest {
 			@Test
 			public void should_include_dependency_from_inject_constructor() {
 				InjectionProvider<InjectConstructor> provider = new InjectionProvider<>(InjectConstructor.class);
-				assertArrayEquals(new Context.Ref[]{Context.Ref.of(Dependency.class)}, provider.getDependencies().toArray(Context.Ref[]::new));
+				assertArrayEquals(new ComponentRef[]{ComponentRef.of(Dependency.class)}, provider.getDependencies().toArray(ComponentRef[]::new));
 			}
 
 			@Test
 			public void should_include_provider_type_from_inject_constructor() {
 				InjectionProvider<ProviderInjectConstructor> provider = new InjectionProvider<>(ProviderInjectConstructor.class);
-				assertArrayEquals(new Context.Ref[]{Context.Ref.of(dependencyProviderType)}, provider.getDependencies().toArray(Context.Ref[]::new));
+				assertArrayEquals(new ComponentRef[]{ComponentRef.of(dependencyProviderType)}, provider.getDependencies().toArray(ComponentRef[]::new));
 			}
 
 			static class ProviderInjectConstructor {
@@ -99,7 +100,7 @@ public class InjectionTest {
 
 		@Nested
 		class IllegalInjectConstructors {
-			abstract class AbstractComponent implements Component {
+			abstract class AbstractComponent implements TestComponent {
 				@Inject
 				public AbstractComponent() {
 				}
@@ -110,7 +111,7 @@ public class InjectionTest {
 			}
 			@Test
 			public void should_throw_exception_if_component_is_interface() {
-				assertThrows(IllegalComponentException.class, () -> new InjectionProvider<>(Component.class));
+				assertThrows(IllegalComponentException.class, () -> new InjectionProvider<>(TestComponent.class));
 			}
 			static class MultiInjectConstructors {
 				@Inject
@@ -136,8 +137,20 @@ public class InjectionTest {
 
 		@Nested
 		public class WithQualifier {
-			//TODO inject with qualifier
-			//TODO throw illegal component if illegal qualifier given to injection point
+			// TODO inject with qualifier
+			// TODO include qualifier with dependency
+			static class InjectConstructor {
+				@Inject
+				public InjectConstructor(@Named("ChoseOne") Dependency dependency) {}
+			}
+			@Test
+			public void should_include_qualifier_with_dependency() {
+				InjectionProvider<InjectConstructor> provider = new InjectionProvider<>(InjectConstructor.class);
+				assertArrayEquals(new ComponentRef<?>[] {
+						ComponentRef.of(Dependency.class, new NamedLiteral("ChoseOne"))
+				}, provider.getDependencies().toArray());
+			}
+			// TODO throw illegal component if illegal qualifier given to injection point
 		}
 	}
 
@@ -164,12 +177,12 @@ public class InjectionTest {
 			@Test
 			public void should_include_dependency_from_field_dependency() {
 				InjectionProvider<ComponentWithFieldInjection> provider = new InjectionProvider<>(ComponentWithFieldInjection.class);
-				assertArrayEquals(new Context.Ref[]{Context.Ref.of(Dependency.class)}, provider.getDependencies().toArray(Context.Ref[]::new));
+				assertArrayEquals(new ComponentRef[]{ComponentRef.of(Dependency.class)}, provider.getDependencies().toArray(ComponentRef[]::new));
 			}
 			@Test
 			public void should_include_provider_type_from_inject_filed() {
 				InjectionProvider<ProviderInjectField> provider = new InjectionProvider<>(ProviderInjectField.class);
-				assertArrayEquals(new Context.Ref[]{Context.Ref.of(dependencyProviderType)}, provider.getDependencies().toArray(Context.Ref[]::new));
+				assertArrayEquals(new ComponentRef[]{ComponentRef.of(dependencyProviderType)}, provider.getDependencies().toArray(ComponentRef[]::new));
 			}
 
 			static class ProviderInjectField {
@@ -198,8 +211,9 @@ public class InjectionTest {
 
 		@Nested
 		public class WithQualifier {
-			//TODO inject with qualifier
-			//TODO throw illegal component if illegal qualifier given to injection point
+			// TODO inject with qualifier
+			// TODO include qualifier with dependency
+			// TODO throw illegal component if illegal qualifier given to injection point
 		}
 	}
 
@@ -276,13 +290,13 @@ public class InjectionTest {
 			@Test
 			public void should_include_dependencies_from_inject_method() {
 				InjectionProvider<InjectMethodWithDependency> provider = new InjectionProvider<>(InjectMethodWithDependency.class);
-				assertArrayEquals(new Context.Ref[]{Context.Ref.of(Dependency.class)}, provider.getDependencies().toArray(Context.Ref[]::new));
+				assertArrayEquals(new ComponentRef[]{ComponentRef.of(Dependency.class)}, provider.getDependencies().toArray(ComponentRef[]::new));
 			}
 
 			@Test
 			public void should_include_provider_type_from_inject_method() {
 				InjectionProvider<ProviderInjectMethod> provider = new InjectionProvider<>(ProviderInjectMethod.class);
-				assertArrayEquals(new Context.Ref[]{Context.Ref.of(dependencyProviderType)}, provider.getDependencies().toArray(Context.Ref[]::new));
+				assertArrayEquals(new ComponentRef[]{ComponentRef.of(dependencyProviderType)}, provider.getDependencies().toArray(ComponentRef[]::new));
 			}
 
 			static class ProviderInjectMethod {
@@ -315,8 +329,9 @@ public class InjectionTest {
 
 		@Nested
 		public class WithQualifier {
-			//TODO inject with qualifier
-			//TODO throw illegal component if illegal qualifier given to injection point
+			// TODO inject with qualifier
+			// TODO include qualifier with dependency
+			// TODO throw illegal component if illegal qualifier given to injection point
 		}
 	}
 }

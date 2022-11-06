@@ -31,7 +31,7 @@ public class ContainerTest {
 
 }
 
-interface Component {
+interface TestComponent {
 	default Dependency dependency() {
 		return null;
 	}
@@ -45,13 +45,13 @@ interface AnotherDependency {
 
 }
 
-class ComponentWithDefaultConstructor implements Component {
+class ComponentWithDefaultConstructor implements TestComponent {
 	public ComponentWithDefaultConstructor() {
 
 	}
 }
 
-class ComponentWithInjectConstructor implements Component {
+class ComponentWithInjectConstructor implements TestComponent {
 	private Dependency dependency;
 
 	@Inject
@@ -64,7 +64,7 @@ class ComponentWithInjectConstructor implements Component {
 	}
 }
 
-class ComponentWithMultiInjectConstructors implements Component {
+class ComponentWithMultiInjectConstructors implements TestComponent {
 	@Inject
 	public ComponentWithMultiInjectConstructors(String name, Double value) {
 
@@ -76,7 +76,7 @@ class ComponentWithMultiInjectConstructors implements Component {
 	}
 }
 
-class ComponentWithNoInjectConstructorNorDefaultConstructor implements Component {
+class ComponentWithNoInjectConstructorNorDefaultConstructor implements TestComponent {
 	public ComponentWithNoInjectConstructorNorDefaultConstructor(String name) {
 
 	}
@@ -96,19 +96,19 @@ class DependencyWithInjectConstructor implements Dependency {
 }
 
 class DependencyDependedOnComponent implements Dependency {
-	private Component component;
+	private TestComponent component;
 
 	@Inject
-	public DependencyDependedOnComponent(Component component) {
+	public DependencyDependedOnComponent(TestComponent component) {
 		this.component = component;
 	}
 }
 
 class AnotherDependencyDependedOnComponent implements AnotherDependency {
-	private Component component;
+	private TestComponent component;
 
 	@Inject
-	public AnotherDependencyDependedOnComponent(Component component) {
+	public AnotherDependencyDependedOnComponent(TestComponent component) {
 		this.component = component;
 	}
 }
