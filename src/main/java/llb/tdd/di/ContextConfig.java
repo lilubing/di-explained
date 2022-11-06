@@ -2,6 +2,7 @@ package llb.tdd.di;
 
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -29,11 +30,14 @@ public class ContextConfig {
         components.put(new Component(type, null), new InjectionProvider<>(implementation));
     }
 
-    public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation, Annotation... qualifiers) {
-        if(Arrays.stream(qualifiers).anyMatch(q -> !q.annotationType().isAnnotationPresent(Qualifier.class))) {
+    public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation, Annotation... annotations) {
+        if(Arrays.stream(annotations).map(Annotation::annotationType)
+                .anyMatch(t -> !t.isAnnotationPresent(Qualifier.class) && !t.isAnnotationPresent(Scope.class))) {
             throw new IllegalComponentException();
         }
-        for (Annotation qualifier : qualifiers) {
+        Arrays.stream(annotations) . filter(a -> a.annotationType() . isAnnotationPresent (Qualifier.class)). toList();
+        Arrays.stream(annotations) . filter(a -> a.annotationType () . isAnnotationPresent (Scope.class)). findFirst();
+        for (Annotation qualifier : annotations) {
             components.put(new Component(type, qualifier), new InjectionProvider<>(implementation));
         }
     }
