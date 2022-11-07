@@ -3,15 +3,22 @@ package llb.tdd.di;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
+import java.util.function.Function;
 
 import static java.util.List.of;
 
 public class ContextConfig {
 
     private Map<Component, ComponentProvider<?>> components = new HashMap<>();
+    private Map<Class<?>, Function<ComponentProvider<?>, ComponentProvider<?>>> scopes = new HashMap<>();
+
+    public ContextConfig() {
+        scope(Singleton.class, SingletonProvider::new);
+    }
 
     public <Type> void bind(Class<Type> type, Type instance) {
         components.put(new Component(type, null), (ComponentProvider<Type>) context -> instance);
@@ -26,21 +33,66 @@ public class ContextConfig {
         }
     }
 
-    public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
-        components.put(new Component(type, null), new InjectionProvider<>(implementation));
+    public <Type, Implementation extends Type>
+    void bind(Class<Type> type, Class<Implementation> implementation) {
+        bind(type, implementation, implementation.getAnnotations());
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation, Annotation... annotations) {
-        if(Arrays.stream(annotations).map(Annotation::annotationType)
+        if (Arrays.stream(annotations).map(Annotation::annotationType)
                 .anyMatch(t -> !t.isAnnotationPresent(Qualifier.class) && !t.isAnnotationPresent(Scope.class))) {
             throw new IllegalComponentException();
         }
-        Arrays.stream(annotations) . filter(a -> a.annotationType() . isAnnotationPresent (Qualifier.class)). toList();
-        Arrays.stream(annotations) . filter(a -> a.annotationType () . isAnnotationPresent (Scope.class)). findFirst();
-        for (Annotation qualifier : annotations) {
-            components.put(new Component(type, qualifier), new InjectionProvider<>(implementation));
+
+        Optional<Annotation> scopeForType = Arrays.stream(implementation.getAnnotations()).filter(a -> a.annotationType().isAnnotationPresent(Scope.class)).findFirst();
+
+        List<Annotation> qualifiers = Arrays.stream(annotations).filter(a -> a.annotationType().isAnnotationPresent(Qualifier.class)).toList();
+        Optional<Annotation> scope = Arrays.stream(annotations).filter(a -> a.annotationType().isAnnotationPresent(Scope.class)).findFirst()
+                .or(() -> scopeForType);
+
+        ComponentProvider<?> injectionProvider = new InjectionProvider<>(implementation);
+
+        ComponentProvider<?> provider =  scope.<ComponentProvider<?>>map(s -> getScopeProvider(s, injectionProvider)).orElse(injectionProvider);
+
+
+        if(qualifiers.isEmpty()) {
+            components.put(new Component(type, null), provider);
+        }
+        for (Annotation qualifier : qualifiers) {
+            components.put(new Component(type, qualifier), provider);
         }
     }
+
+    private ComponentProvider<?> getScopeProvider(Annotation scope, ComponentProvider<?> provider) {
+        return scopes.get(scope.annotationType()).apply(provider);
+    }
+
+    public <ScopeType extends Annotation> void scope(Class<ScopeType> scope, Function<ComponentProvider<?>, ComponentProvider<?>> provider) {
+        scopes.put(scope, provider);
+    }
+
+    static class SingletonProvider<T> implements ComponentProvider<T> {
+        private T singleton;
+        private ComponentProvider<T> provider;
+
+        public SingletonProvider(ComponentProvider<T> provider) {
+            this.provider = provider;
+        }
+
+        @Override
+        public T get(Context context) {
+            if (singleton == null) {
+                singleton = provider.get(context);
+            }
+            return singleton;
+        }
+
+        @Override
+        public List<ComponentRef<?>> getDependencies() {
+            return provider.getDependencies();
+        }
+    }
+
 
     public Context getContext() {
         components.keySet().forEach(component -> checkDependencies(component, new Stack<>()));
