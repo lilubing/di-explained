@@ -39,7 +39,8 @@ public class ContextConfig {
         bind(type, implementation, implementation.getAnnotations());
     }
 
-    public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation, Annotation... annotations) {
+    public <Type, Implementation extends Type>
+    void bind(Class<Type> type, Class<Implementation> implementation, Annotation... annotations) {
         Map<? extends Class<?>, List<Annotation>> annotationGroups = Arrays.stream(annotations).collect(Collectors.groupingBy(this::typeOf, Collectors.toList()));
         if(annotationGroups.containsKey(Illegal.class)) {
             throw new IllegalComponentException();
@@ -50,6 +51,9 @@ public class ContextConfig {
     }
 
     private <Type> ComponentProvider<?> createScopeProvider(Class<Type> implementation, List<Annotation> scopes) {
+        if(scopes.size() > 1) {
+            throw new IllegalComponentException();
+        }
         ComponentProvider<?> injectionProvider = new InjectionProvider<>(implementation);
         return scopes.stream().findFirst().or(() -> scopeFrom(implementation)).<ComponentProvider<?>>map(s -> getScopeProvider(s, injectionProvider)).orElse(injectionProvider);
     }
@@ -77,6 +81,9 @@ public class ContextConfig {
     }
 
     private ComponentProvider<?> getScopeProvider(Annotation scope, ComponentProvider<?> provider) {
+        if(!scopes.containsKey(scope.annotationType())) {
+            throw new IllegalComponentException();
+        }
         return scopes.get(scope.annotationType()).create(provider);
     }
 

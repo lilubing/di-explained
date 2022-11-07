@@ -58,10 +58,6 @@ class ComponentRef<ComponentType> {
         return container;
     }
 
-    public Class<?> getComponentType() {
-        return component.type();
-    }
-
     public boolean isContainer() {
         return container != null;
     }
@@ -72,8 +68,12 @@ class ComponentRef<ComponentType> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ComponentRef<?> that = (ComponentRef<?>) o;
         return Objects.equals(container, that.container) && component.equals(that.component);
     }
