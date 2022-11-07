@@ -10,7 +10,6 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
-import static java.util.stream.Stream.*;
 import static java.util.stream.Stream.concat;
 
 /**
@@ -22,7 +21,7 @@ import static java.util.stream.Stream.concat;
  * @ProjectName 01-di-container
  * @Version V1.0
  */
-class InjectionProvider<T> implements ContextConfig.ComponentProvider<T> {
+class InjectionProvider<T> implements ComponentProvider<T> {
 
     private Injectable<Constructor<T>> injectConstructor;
     private List<Injectable<Method>> injectMethods;

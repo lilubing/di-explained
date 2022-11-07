@@ -674,13 +674,13 @@ record PooledLiteral() implements Pooled {
     }
 }
 
-class PooledProvider<T> implements ContextConfig.ComponentProvider<T> {
+class PooledProvider<T> implements ComponentProvider<T> {
     static int MAX = 2;
     private List<T> pool = new ArrayList<>();
     int current;
-    private ContextConfig.ComponentProvider<T> provider;
+    private ComponentProvider<T> provider;
 
-    public PooledProvider(ContextConfig.ComponentProvider<T> provider) {
+    public PooledProvider(ComponentProvider<T> provider) {
         this.provider = provider;
     }
 
